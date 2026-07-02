@@ -67,7 +67,7 @@ Raw Videos (EPIC-KITCHENS P01)
 │  Stage 3 — Fusion Model           │  Magomed Makhsudov
 │                                   │
 │  concat(text, object [, visual])  │
-│       → MLP trunk (256 → 128)     │
+│       → MLP trunk (256 → 128)     │    
 │       → verb head (59 classes)    │
 │       → noun head (123 classes)   │
 └────────────────┬──────────────────┘
