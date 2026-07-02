@@ -1,0 +1,21 @@
+action_label,count
+turn-on tap,110
+turn-off tap,107
+put-down spatula,99
+open cupboard,90
+stir food,82
+close cupboard,81
+dry hand,80
+open drawer,80
+put-down knife,73
+take knife,66
+close drawer,62
+take spatula,58
+pick-up spatula,57
+put-down plate,51
+take spoon,46
+put-down cloth,43
+rinse hand,43
+put-down mushroom,39
+close fridge,39
+open fridge,39

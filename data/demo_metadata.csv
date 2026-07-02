@@ -1,0 +1,16 @@
+narration_id,participant_id,video_id,start_timestamp,stop_timestamp,start_frame,stop_frame,narration,verb,verb_class,noun,noun_class,duration_sec,action_label,duration_frames
+P01_01_0,P01,P01_01,00:00:00.14,00:00:03.37,8,202,open door,open,3,door,3,3.23,open door,195
+P01_01_1,P01,P01_01,00:00:04.37,00:00:06.17,262,370,turn on light,turn-on,6,light,114,1.8,turn-on light,109
+P01_01_2,P01,P01_01,00:00:06.98,00:00:09.49,418,569,close door,close,4,door,3,2.51,close door,152
+P01_01_3,P01,P01_01,00:00:12.77,00:00:13.99,766,839,open fridge,open,3,fridge,12,1.22,open fridge,74
+P01_01_4,P01,P01_01,00:00:15.25,00:00:16.40,915,983,take celery,take,0,celery,223,1.15,take celery,69
+P01_01_5,P01,P01_01,00:00:16.50,00:00:18.06,990,1083,take container,take,0,container,21,1.56,take container,94
+P01_01_6,P01,P01_01,00:00:18.19,00:00:21.14,1091,1268,take tofu,take,0,tofu,81,2.95,take tofu,178
+P01_01_7,P01,P01_01,00:00:21.91,00:00:23.33,1314,1399,close fridge,close,4,fridge,12,1.42,close fridge,86
+P01_01_8,P01,P01_01,00:00:23.18,00:00:24.29,1390,1457,open fridge,open,3,fridge,12,1.11,open fridge,68
+P01_01_9,P01,P01_01,00:00:24.48,00:00:27.94,1468,1676,take carrots and,take,0,carrot,41,3.46,take carrot,209
+P01_01_10,P01,P01_01,00:00:24.97,00:00:26.20,1498,1572,open drawer,open,3,drawer,8,1.23,open drawer,75
+P01_01_11,P01,P01_01,00:00:29.22,00:00:31.32,1753,1879,close fridge,close,4,fridge,12,2.1,close fridge,127
+P01_01_12,P01,P01_01,00:00:36.68,00:00:37.78,2200,2266,put down vegetables,put-down,1,vegetable,94,1.1,put-down vegetable,67
+P01_01_13,P01,P01_01,00:00:41.79,00:00:42.55,2507,2553,open cupboard,open,3,cupboard,3,0.76,open cupboard,47
+P01_01_14,P01,P01_01,00:00:43.20,00:00:46.64,2592,2798,take cutting board,take,0,board:cutting,18,3.44,take board:cutting,207

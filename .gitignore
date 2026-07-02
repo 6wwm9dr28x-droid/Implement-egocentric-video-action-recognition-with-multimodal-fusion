@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Large binaries
+*.npy
+*.tar
+*.mp4
+*.MP4
+downloads/
+frames/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store

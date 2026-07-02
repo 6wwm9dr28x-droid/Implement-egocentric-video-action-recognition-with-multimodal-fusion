@@ -1,0 +1,5 @@
+split,rows,columns,has_narration,has_labels
+train,5509,17,True,True
+val,885,17,True,True
+test,647,8,False,False
+demo,15,15,True,True
