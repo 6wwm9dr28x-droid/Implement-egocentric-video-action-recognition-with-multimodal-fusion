@@ -1,146 +1,132 @@
-# Multimodal Egocentric Action Recognition — EPIC-KITCHENS
+# Multimodal Egocentric Action Recognition on EPIC-KITCHENS
 
-**Project 11 | Machine Learning Course | Group 11**
+**Project 11 · Machine Learning · Group 11**
 
-> *Can we recognise fine-grained cooking actions from egocentric video by fusing language narrations, object cues, and video frames using frozen pretrained encoders?*
+Can we figure out what someone is doing in the kitchen just by watching from their point of view? That's the question we set out to answer. Using short first-person clips from the EPIC-KITCHENS-100 dataset, we built a model that combines what people *say* they're doing, what objects are in the scene, and what the camera actually sees — then predicts the action.
 
----
+## The Team
 
-## Team
+We split the work three ways, playing to what each of us wanted to dig into:
 
-| Member | Role | Contribution |
-|:---|:---|:---|
-| Uzoma Eze | Data Preparation | Dataset download, frame extraction, split design, class-imbalance analysis |
-| Amrin Yanya | Feature Extraction | Sentence-BERT text encoder, CLIP visual encoder, one-hot object features |
-| Magomed Makhsudov | Model Development & Evaluation | Fusion architecture, training, ablation study, test predictions |
+- **Uzoma Eze** handled the data side — downloading the dataset, pulling out frames, designing the train/val splits, and digging into the class imbalance mess.
+- **Amrin Yanya** worked on feature extraction — wiring up Sentence-BERT for the narrations, CLIP for the visual side, and building the one-hot object features.
+- **Magomed Makhsudov** built the actual model — the fusion architecture, training pipeline, ablations, and the final test predictions.
 
----
+## What We're Actually Doing
 
-## Overview
+We scoped the problem to a single participant (P01) from EPIC-KITCHENS-100. Every clip is a few seconds of someone cooking, filmed from a head-mounted camera. The model has to predict a **verb** (like *cut*) and a **noun** (like *tomato*). Together they make the action (*cut tomato*).
 
-We tackle **action recognition** on the [EPIC-KITCHENS-100](https://epic-kitchens.github.io) dataset, restricted to Participant P01. Given a short first-person video clip, the model predicts the **verb** (e.g. *cut*) and **noun** (e.g. *tomato*) that together form the action (e.g. *cut tomato*).
+A few decisions shaped everything else:
 
-**Key design choices:**
-- Freeze large pretrained encoders (Sentence-BERT, CLIP) — no fine-tuning
-- Predict verb and noun with **two separate heads** (59 + 123 classes) rather than the flat 1,060 action labels
-- Handle severe long-tail imbalance with **inverse-frequency weighted loss**
-- Evaluate with **macro-F1** alongside top-1/5 accuracy to capture tail-class performance
+- **We didn't fine-tune the big encoders.** Sentence-BERT and CLIP stay frozen. We only train the small fusion head on top. Less compute, less overfitting risk, and it turned out to be plenty.
+- **Two heads instead of one.** Predicting verb (59 classes) and noun (123 classes) separately is way easier than predicting one of 1,060 flat action labels. And you can still combine them at the end.
+- **The long tail is brutal.** Some actions show up hundreds of times; others show up twice. We used inverse-frequency weighted loss to stop the model from just memorizing the common classes.
+- **Accuracy alone lies.** With this much imbalance, top-1 accuracy makes bad models look good. We report macro-F1 too, which actually cares about the rare classes.
 
----
-
-## Dataset
+## The Data
 
 | Split | Clips | Videos | Labels |
-|:---|---:|---:|:---|
+|-------|------:|-------:|--------|
 | Train | 5,509 | 22 | verb + noun |
-| Val | 885 | 5 | verb + noun |
-| Test | 647 | 1 (P01_101) | none — prediction target |
-| Demo | 15 | 1 (P01_01) | verb + noun |
+| Val   |   885 | 5  | verb + noun |
+| Test  |   647 | 1 (P01_101) | — (what we predict) |
+| Demo  |    15 | 1 (P01_01)  | verb + noun |
 
-Source: [Bristol Research Data Repository](https://data.bris.ac.uk/datasets/)
+Everything comes from the [Bristol Research Data Repository](https://data.bris.ac.uk/data/dataset/2g1n6qdydwa9u22shpxqzp0t8m).
 
----
-
-## Pipeline
+## How the Pipeline Fits Together
 
 ```
 Raw Videos (EPIC-KITCHENS P01)
         │
         ▼
 ┌───────────────────────────────────┐
-│  Stage 1 — Data Preparation       │  Uzoma Eze
-│  Frame extraction · Split design  │
-│  Class imbalance analysis         │
+│  Stage 1 — Data Prep              │  Uzoma
+│  Frame extraction, splits,        │
+│  class imbalance analysis         │
 └────────────────┬──────────────────┘
-                 │
                  ▼
 ┌───────────────────────────────────┐
-│  Stage 2 — Feature Extraction     │  Amrin Yanya
+│  Stage 2 — Feature Extraction     │  Amrin
 │                                   │
-│  narration ─► Sentence-BERT ──► 384-d text vector
-│  noun_class ─► one-hot ───────► 123-d object vector
-│  frames ─────► CLIP ViT-B/32 ─► 512-d visual vector
+│  narration ─► Sentence-BERT ─► 384-d
+│  noun_class ─► one-hot ──────► 123-d
+│  frames ────► CLIP ViT-B/32 ─► 512-d
 └────────────────┬──────────────────┘
-                 │
                  ▼
 ┌───────────────────────────────────┐
-│  Stage 3 — Fusion Model           │  Magomed Makhsudov
+│  Stage 3 — Fusion Model           │  Magomed
 │                                   │
 │  concat(text, object [, visual])  │
-│       → MLP trunk (256 → 128)     │    
-│       → verb head (59 classes)    │
-│       → noun head (123 classes)   │
+│    → MLP (256 → 128)              │
+│    → verb head (59)               │
+│    → noun head (123)              │
 └────────────────┬──────────────────┘
-                 │
                  ▼
         Results & Predictions
 ```
 
----
+## What We Found
 
-## Results
+All numbers on the validation set (885 clips):
 
-All metrics on the **validation set** (885 clips):
-
-| Model | Verb @1 | Verb @5 | Verb F1 | Noun @1 | Noun @5 | Noun F1 | Action @1 |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Text only | 0.973 | 0.998 | 0.787 | 0.967 | 0.990 | 0.831 | 0.944 |
-| Object only | 0.122 | 0.704 | 0.085 | 1.000 | 1.000 | 1.000 | 0.129 |
+| Model | Verb@1 | Verb@5 | Verb F1 | Noun@1 | Noun@5 | Noun F1 | Action@1 |
+|-------|-------:|-------:|--------:|-------:|-------:|--------:|---------:|
+| Text only              | 0.973 | 0.998 | 0.787 | 0.967 | 0.990 | 0.831 | 0.944 |
+| Object only            | 0.122 | 0.704 | 0.085 | 1.000 | 1.000 | 1.000 | 0.129 |
 | **Fusion (text + object)** | **0.982** | **1.000** | **0.918** | **1.000** | **1.000** | **1.000** | **0.986** |
-| Video only† | 0.059 | 0.595 | 0.003 | 0.042 | 0.053 | 0.001 | 0.000 |
+| Video only†            | 0.059 | 0.595 | 0.003 | 0.042 | 0.053 | 0.001 | 0.000 |
 
-† Trained on 329 clips from P01_01 only due to download constraints.
+† Video-only was trained on just 329 clips from P01_01 — we ran into download limits and couldn't get the rest of the frames in time.
 
-**Key finding:** Fusion beats every single stream on macro-F1 (+16.6 pp over text-only), confirming that object cues rescue tail-class predictions where narrations alone are ambiguous. Text narrations are near-label-leaky by design — the video-only baseline is the honest deployable model.
+**The headline result:** fusing text with object features beats every single-stream model on macro-F1 by a wide margin (+16.6 pp over text alone). The object features rescue exactly the tail classes where the narration is ambiguous — which is what you'd hope for.
 
----
+**An honest caveat:** the text narrations are basically leaking the label. They're descriptive by design, so a text-only model does suspiciously well. In a real deployment you wouldn't have those narrations, which is why the video-only baseline — bad as it looks here — is really the one that matters. The fusion result is best read as an upper bound on what multimodal signals can offer, not the final production model.
 
-## Repository Structure
+## What's in the Repo
 
 ```
-├── data/               Stage 1 — metadata CSVs, class distribution analysis
-├── features/           Stage 2 — feature extraction code and notebook
-├── model/              Stage 3 — training scripts, fusion architecture
-├── results/            Metrics, test predictions, presentation plots
-├── notebooks/          Full presentation notebook (end-to-end runnable)
+├── data/         Stage 1 — metadata CSVs, class distribution analysis
+├── features/     Stage 2 — feature extraction code + notebooks
+├── model/        Stage 3 — training scripts, fusion architecture
+├── results/      Metrics, test predictions, plots for the presentation
+├── notebooks/    End-to-end runnable presentation notebook
 └── README.md
 ```
 
----
+## Running It Yourself
 
-## Running the Code
+Install the dependencies:
 
-### Requirements
 ```bash
 pip install numpy pandas scikit-learn sentence-transformers torch open_clip_torch matplotlib pillow
 ```
 
-### Step-by-step
+Then run the three stages:
 
 ```bash
-# 1. Generate text + object features (train / val / demo)
+# 1. Extract text + object features for train / val / demo
 python model/generate_features.py
 
-# 2. Train all models + ablation table
+# 2. Train all the models and produce the ablation table
 python model/train_fusion.py
 
-# 3. Generate presentation plots
+# 3. Make the plots we used in the presentation
 python model/visualize_results.py
 ```
 
-> Visual (CLIP) feature extraction requires downloading P01 frame tars from the Bristol server.
-> See `features/README.md` for the full extraction workflow.
+Extracting the CLIP visual features is more involved — you need to pull the P01 frame tarballs from the Bristol server first. See [`features/README.md`](features/README.md) for the full workflow.
+
+## The Presentation Notebook
+
+If you just want to see the whole thing end-to-end, open [`notebooks/multimodal_action_recognition.ipynb`](notebooks/multimodal_action_recognition.ipynb). It's self-contained, runs on CPU in about 30 seconds, and walks through:
+
+- loading the pre-extracted features from `results/features/`,
+- training the fusion model live,
+- evaluating on the validation set,
+- printing the ablation table and plots,
+- and showing predictions on the demo clip.
 
 ---
 
-## Presentation Notebook
-
-`notebooks/multimodal_action_recognition.ipynb` — fully self-contained, runs on CPU in ~30 s:
-
-- Loads pre-extracted features from `results/features/`
-- Defines and trains the fusion model live
-- Evaluates on val, shows ablation table, plots, and demo clip predictions
-
----
-
-*Group 11 | Machine Learning | 2026*
+*Group 11 · Machine Learning · 2026*
